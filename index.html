@@ -287,6 +287,8 @@
   .brow .stp{font-weight:700; color:#2f8a3a; border:3px solid #2f8a3a; border-radius:8px; padding:1px 7px; transform:rotate(-4deg); font-size:13px;}
   .about{font-size:13.5px; color:var(--muted); line-height:1.45; text-align:left; background:#f6f2fb; border-radius:12px; padding:10px 12px; margin:12px 0 0;}
   .tag{font-family:'Fredoka',sans-serif; font-weight:600;}
+  .floaty{animation:floaty 2.2s ease-out forwards;}
+  @keyframes floaty{0%{opacity:0; transform:translateY(6px);} 20%{opacity:1;} 100%{opacity:0; transform:translateY(-46px);}}
 </style>
 </head>
 <body>
@@ -520,10 +522,15 @@
     snip(){ noise(.04, 0, .2, 5000, 4000, 4); noise(.04, .12, .2, 5000, 4000, 4); },
     softWoof(){ tone(330, .14, 'triangle', 0, .1, 260); },
     bigWoof(){ tone(150, .22, 'sawtooth', 0, .12, 110); noise(.12, 0, .12, 600, 300, 2); tone(140, .22, 'sawtooth', .3, .1, 100); },
-    calm(){ chord([N(60), N(64), N(67), N(72)], {dur: 2.6, vol: .08, strum: .05, cutoff: 2200}); },
-    warm(){ chord([N(53), N(57), N(60), N(65), N(69)], {dur: 3.4, vol: .1, strum: .06, cutoff: 2200}); }
+    // a little wooden mallet sound: a short sine with a click of overtone
+    mar(n, when, vol){ tone(N(n), .5, 'sine', when || 0, vol || .09); tone(N(n + 19), .08, 'sine', when || 0, (vol || .09)*.35); },
+    calm(){ [67, 71, 74].forEach((n, i) => SFX.mar(n, i*.11, .08)); },
+    warm(){ [67, 71, 74, 79, 83].forEach((n, i) => SFX.mar(n, i*.12, .09)); },
+    flourish(){ [67, 71, 74, 79, 74, 79, 83, 86].forEach((n, i) => SFX.mar(n, i*.1, .1)); },
+    murmur(){ noise(.45, 0, .025, 1100, 700, 1.2); tone(N(55), .5, 'sine', 0, .03, N(53)); },
+    thump(v){ tone(62, .1, 'sine', 0, v, 48); tone(62, .09, 'sine', .15, v*.65, 48); }
   });
-  function pad(notes, opts){ chord(notes.map(N), Object.assign({dur: 7, vol: .05, attack: 1.4, cutoff: 1500}, opts || {})); }
+  function pad(){ /* no pads in this game: that sound belongs to Nala */ }
 
   // ---------- effects ----------
   let bannerFree = 0;
@@ -634,6 +641,7 @@
       if (s > .5) T.ear = 38*clamp((s - .5)/.25, 0, 1);
       if (s > .72){ T.tail = -150; T.lift += 6; T.head += 12; }      // tail tucked under
     }
+    if (d.listening && (d.pose === 'stand' || d.pose === 'sit' || d.pose === 'lie' || d.pose === 'beg')){ T.head -= 10 + Math.sin(t*1.2)*4; T.tail = (d.pose === 'stand' ? 0 : T.tail) + Math.sin(t*5)*14; T.ear *= .5; }
     if (d.moving){ d.walk += 0.016*14; const a = Math.sin(d.walk)*26; T.lf1 = a; T.lf2 = -a; T.lb1 = -a; T.lb2 = a; T.lift += -Math.abs(Math.sin(d.walk))*4; }
     if (d.sig.yawn > 0) T.head -= 22;
     return T;
@@ -728,7 +736,7 @@
     light: '<rect x="-4" y="-40" width="8" height="34" rx="3" fill="#56606e"/><circle cx="0" cy="-42" r="5" fill="#fff6b0"/>',
     scope: '<path d="M-6 -36 L 6 -36 L 2 -54 L -2 -54 Z" fill="#2c3440"/><rect x="-5" y="-36" width="10" height="30" rx="3" fill="#56606e"/>',
     steth: '<circle cx="0" cy="-24" r="10" fill="#c9d3de" stroke="#56606e" stroke-width="3"/>',
-    needle: '<rect x="-5" y="-54" width="10" height="42" rx="3" fill="#e9f2ff" stroke="#9fb7d9" stroke-width="2"/><rect x="-3" y="-38" width="6" height="18" fill="#9fd3ff"/><line x1="0" y1="-54" x2="0" y2="-74" stroke="#7d8794" stroke-width="2"/><rect x="-8" y="-12" width="16" height="6" rx="2" fill="#9fb7d9"/>',
+    needle: '<g transform="rotate(-108) translate(0,-6)"><rect x="-1.5" y="-4" width="3" height="12" fill="#c9d3de"/><rect x="-7" y="6" width="14" height="3" rx="1.5" fill="#c9d3de"/><rect x="-4" y="-30" width="8" height="26" rx="2" fill="#f4f8ff" stroke="#9fb7d9" stroke-width="1.5"/><rect x="-2.6" y="-27" width="5.2" height="12" fill="#9fd3ff"/><g stroke="#9fb7d9" stroke-width="1"><line x1="-4" y1="-22" x2="-1" y2="-22"/><line x1="-4" y1="-17" x2="-1" y2="-17"/><line x1="-4" y1="-12" x2="-1" y2="-12"/></g><line x1="0" y1="-30" x2="0" y2="-46" stroke="#8e98a6" stroke-width="1.4"/></g>',
     scissors: '<path d="M-2 -8 L -9 -48 M 2 -8 L 9 -48" stroke="#7d8794" stroke-width="4" stroke-linecap="round"/><circle cx="-6" cy="0" r="6" fill="none" stroke="#3a7bd5" stroke-width="3"/><circle cx="6" cy="0" r="6" fill="none" stroke="#3a7bd5" stroke-width="3"/>'
   };
   const SKIN = '#8d5a3c';
@@ -764,7 +772,7 @@
   }
   function vetHide(){ vet.on = false; const b = $('vetBody'); if (b){ b.style.display = 'none'; $('vetArm').style.display = 'none'; } }
   function vetRest(){ return {x: vet.x - 50*vet.sc, y: vet.feet - 136*vet.sc}; }
-  function vetTo(x, y, tool){ vet.thx = x; vet.thy = y; $('vetTool').innerHTML = TOOLS[tool || 'none']; }
+  function vetTo(x, y, tool){ vet.thx = x; vet.thy = y; vet.tool = tool || 'none'; $('vetTool').innerHTML = TOOLS[vet.tool]; }
   function vetAway(){ vet.thx = null; setTimeout(() => { if (vet.thx == null && $('vetTool')) $('vetTool').innerHTML = ''; }, 700); }
   function vetNod(){ vet.nod = 1; }
   function renderVet(dt){
@@ -785,8 +793,8 @@
     const ex = mx + nx*h, ey = my + ny*h;
     const set = (id, a, b, c, e) => { const l = $(id); l.setAttribute('x1', a.toFixed(1)); l.setAttribute('y1', b.toFixed(1)); l.setAttribute('x2', c.toFixed(1)); l.setAttribute('y2', e.toFixed(1)); };
     set('vaUp', sx, sy, ex, ey); set('vaFore', ex, ey, hx, hy);
-    $('vaUp').setAttribute('stroke-width', 22*vet.sc); $('vaFore').setAttribute('stroke-width', 15*vet.sc);
-    const ang = Math.atan2(hy - ey, hx - ex)*180/Math.PI + 90;
+    $('vaUp').setAttribute('stroke-width', 22*vet.sc); $('vaFore').setAttribute('stroke-width', 13*vet.sc);
+    const ang = vet.tool === 'needle' ? 0 : Math.atan2(hy - ey, hx - ex)*180/Math.PI + 90;
     $('vaHand').setAttribute('transform', `translate(${hx.toFixed(1)},${hy.toFixed(1)}) rotate(${ang.toFixed(1)}) scale(${vet.sc})`);
   }
 
@@ -853,7 +861,6 @@
     dog.onSignal = (k) => teach(S, k);
     say('<b>The waiting room.</b> Poppy is nervous. Hold <b>Stroke her</b>, and watch her heart come down. <b>Talking softly</b> helps too. Treats are for the hard moments.');
     controls(S, ['stroke', 'talk', 'treat']);
-    pad([53, 57, 60, 64], {vol: .035, dur: 9});
     // the waiting room has its moments
     after(7, () => { SFX.hiss(); ahh('HSSSS!', 690, 160, true); bump(.22); $('carrier').classList.add('shake'); });
     after(13, () => { big.moving = true; S.bigIn = true; });
@@ -954,7 +961,6 @@
     M.s = .42; M.s0 = .33; M.sum = 0; M.n = 0; M.scoring = true; M.gentle = 420;
     sayVet('Hello again, Poppy! Just a little jab today, against puppy illnesses. <b>Get her calm first</b>, then tell me when. A treat at the right moment helps: she\'s busy chewing when the needle comes.');
     controls(S, ['stroke', 'talk', 'treat', 'go']);
-    pad([57, 60, 64, 67], {vol: .035, dur: 9});
     S.update = (dt) => { S.t += dt; };
     return S;
   }
@@ -962,10 +968,10 @@
     if (S.busy) return; S.busy = true;
     if (M.s < .35){ S.hearts++; heartPop(); }
     S.countT = 0;
-    vetTo(470, 150, 'needle');
+    vetTo(426, 140, 'needle');
     sayVet('<b>On three.</b> One…'); SFX.tick();
-    after(1.2, () => { sayVet('<b>On three.</b> One… two…'); SFX.tick(); vetTo(430, 190, 'needle'); });
-    after(2.4, () => { sayVet('<b>On three.</b> One… two… <b>three!</b>'); vetTo(398, 222, 'needle'); });
+    after(1.2, () => { sayVet('<b>On three.</b> One… two…'); SFX.tick(); vetTo(402, 176, 'needle'); });
+    after(2.4, () => { sayVet('<b>On three.</b> One… two… <b>three!</b>'); vetTo(384, 204, 'needle'); });
     after(2.7, () => {
       const chewing = M.chew > 0;
       if (chewing){ bump(.04); S.hearts++; heartPop(); ahh('nom', 470, 150); say('<b>She didn\'t even notice!</b> She was busy with her treat.'); }
@@ -1006,7 +1012,6 @@
     say('<b>The morning of the operation.</b> No breakfast today: her tummy has to be empty. But oh, those eyes…');
     S.resisted = true;
     controls(S, ['stroke', 'breakfast']);
-    pad([53, 57, 60, 64], {vol: .035, dur: 9});
     S.whine = 2;
     S.update = (dt) => {
       S.t += dt;
@@ -1064,9 +1069,6 @@
     say('<b>The waiting.</b> There\'s nothing you can do now. Only wait.');
     hrGone(true);
     S.w = 0;
-    pad([45, 52, 57, 60], {vol: .035, dur: 10});
-    after(5, () => pad([41, 48, 53, 57], {vol: .035, dur: 10}));
-    after(10, () => pad([43, 50, 55, 59], {vol: .035, dur: 10}));
     after(15, () => { SFX.buzz(); });
     after(16.2, () => { sayVet('<b>She\'s fine.</b> It all went well. She\'s waking up now. You can come and see her.'); SFX.warm(); });
     after(22, () => partWaking(S));
@@ -1145,7 +1147,7 @@
       vetHide(); const d2 = setDogScene(S, `<g>${gardenBG()}</g>`, 120, 372, 1, 'stand');
       d2.el.scar.style.display = ''; d2.moving = true; d2.tailSpeed = 28; S.run = true;
       say('Back in the garden. Just a thin line along her ridge now, and the zoomies.');
-      chord([N(48), N(55), N(64), N(67), N(72)], {dur: 4, vol: .14, strum: .06, cutoff: 2800});
+      SFX.flourish();
       after(5.5, () => finishRound(S));
     });
     S.update = (dt) => { S.t += dt; if (S.run && S.dog){ S.dog.x += dt*170; if (S.dog.x > 700){ S.dog.dir = -1; } if (S.dog.dir < 0) S.dog.x -= dt*340; if (S.dog.x < 120) S.dog.dir = 1; } };
@@ -1190,7 +1192,16 @@
   }
 
   // ---------- HUD ----------
-  let beatPh = 0, hrHidden = false, strokeShown = false;
+  let beatPh = 0, hrHidden = false, strokeShown = false, talkT = 0, lastBeat = 0;
+  const SOOTHE = ['shh…', 'good girl…', 'it\'s ok…', 'there, there…', 'I\'m here…', 'brave Poppy…'];
+  function murmur(d){
+    const tg = $('tags'); if (!tg || !d) return;
+    const t = document.createElementNS(NS, 'text');
+    t.setAttribute('x', clamp(d.x - 120*d.s, 70, 700)); t.setAttribute('y', d.gy - 130*d.s);
+    t.setAttribute('text-anchor', 'middle'); t.setAttribute('font-family', 'Nunito, sans-serif'); t.setAttribute('font-style', 'italic'); t.setAttribute('font-weight', '700'); t.setAttribute('font-size', '22'); t.setAttribute('fill', '#2c8a7f');
+    t.style.transformBox = 'fill-box'; t.setAttribute('class', 'floaty'); t.textContent = '♪ ' + SOOTHE[Math.floor(Math.random()*SOOTHE.length)];
+    tg.appendChild(t); setTimeout(() => t.remove(), 2300);
+  }
   function hrGone(v){ hrHidden = v; $('hrChip').classList.toggle('gone', v); $('calmLab').style.visibility = v ? 'hidden' : ''; }
   function renderHud(dt){
     const bpm = Math.round(68 + 110*M.s);
@@ -1199,6 +1210,9 @@
     $('hrChip').className = 'chip ' + cls + (hrHidden ? ' gone' : '');
     const lab = $('calmLab'); lab.className = cls; lab.textContent = M.s > .62 ? 'scared' : M.s > .4 ? 'nervous' : 'calm';
     beatPh += dt*bpm/60;
+    // you can hear her heart when she's nervous: louder and faster the more scared she is
+    if (Math.floor(beatPh) !== lastBeat){ lastBeat = Math.floor(beatPh); if (!hrHidden && M.s > .38 && R && R.dog) SFX.thump(.05 + .2*(M.s - .38)); }
+    if (M.talk && R && R.dog){ talkT -= dt; if (talkT <= 0){ talkT = 1.3; murmur(R.dog); SFX.murmur(); } } else talkT = 0;
     const k = 1 + .22*Math.pow(Math.max(0, Math.sin(beatPh*Math.PI*2)), 6);
     $('hrIcon').style.transform = `scale(${k.toFixed(2)})`;
     if (fastWarn > 0) fastWarn -= dt;
@@ -1290,7 +1304,7 @@
     if (!R) return;
     stepCalm(dt);
     if (R.update) R.update(dt);
-    (R.dogs || []).forEach(d => { if (d === R.dog) d.stress = M.s; renderDog(d, dt); });
+    (R.dogs || []).forEach(d => { if (d === R.dog){ d.stress = M.s; d.listening = M.talk || M.strokeHold; } renderDog(d, dt); });
     renderVet(dt);
     renderHud(dt);
   }
