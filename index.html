@@ -372,9 +372,9 @@
       <li><b>Talk softly.</b> Hold the button and murmur to her. Stroking and talking together work best.</li>
       <li><b>A treat</b> takes her mind off things while she chews. Save it for the moment it's needed.</li>
       <li><b>Read her.</b> Licking her lips means she's a bit worried. Yawning, ears back: stressed. The whites of her eyes, tail tucked, trembling: very scared.</li>
-      <li><b>Go at her pace.</b> Tell the vet to go ahead only when Poppy is calm. Rushing makes the next step harder.</li>
+      <li><b>Go at her pace.</b> Tell the vet to go ahead only when Poppy is calm. Rush her, and she gets more and more frightened, until the vet has to stop.</li>
     </ul>
-    <p class="small">There's no losing in this game. Stars show how calm she stayed, hearts how often you got the moment right.</p>
+    <p class="small">Stars show how calm she stayed, hearts how often you got the moment right.</p>
     <button class="btn" id="helpClose">Got it</button>
   </div>
 </div>
@@ -526,6 +526,7 @@
     tick(){ tone(2200, .025, 'square', 0, .03); },
     buzz(){ for (let i = 0; i < 3; i++) tone(180, .12, 'square', i*.18, .03); },
     snip(){ noise(.04, 0, .2, 5000, 4000, 4); noise(.04, .12, .2, 5000, 4000, 4); },
+    yip(){ tone(900, .09, 'triangle', 0, .14, 1250); tone(1000, .08, 'triangle', .12, .1, 1300); },
     softWoof(){ tone(330, .14, 'triangle', 0, .1, 260); },
     bigWoof(){ tone(150, .22, 'sawtooth', 0, .12, 110); noise(.12, 0, .12, 600, 300, 2); tone(140, .22, 'sawtooth', .3, .1, 100); },
     // a little wooden mallet sound: a short sine with a click of overtone
@@ -823,19 +824,19 @@
     hand = $('hand');
     const dog = makeDog('poppy', 250, 372, 1, 1); dog.pose = 'sit'; dog.signals = true;
     const big = makeDog('big', 940, 380, 1.35, -1); big.pose = 'stand';
-    const S = {key: 'check', dog, dogs: [dog, big], t: 0, phase: 'wait', canStroke: true, treats: 3, step: -1, hearts: 0, max: 6, busy: false, seen: {}};
+    const S = {key: 'check', dog, dogs: [dog, big], t: 0, phase: 'wait', canStroke: true, treats: 3, step: -1, hearts: 0, max: 4, busy: false, seen: {}};
     M.s = .38; M.s0 = .34; M.sum = 0; M.n = 0; M.scoring = true; M.gentle = 420;
     dog.onSignal = (k) => teach(S, k);
     say('<b>The waiting room.</b> Poppy is nervous. Hold <b>Stroke her</b>, and watch her heart come down. <b>Talking softly</b> helps too. Treats are for the hard moments.');
     controls(S, ['stroke', 'talk', 'treat']);
     // the waiting room has its moments
-    after(7, () => { SFX.hiss(); ahh('HSSSS!', 690, 160, true); bump(.22); $('carrier').classList.add('shake'); });
-    after(13, () => { big.moving = true; S.bigIn = true; });
-    after(17.5, () => { big.moving = false; SFX.bigWoof(); ahh('WOOF!', 640, 180, true); bump(.26); });
-    after(21, () => { SFX.bigWoof(); ahh('WOOF!', 640, 180, true); bump(.18); });
-    after(25, () => { SFX.ding(); bump(.1); });
-    after(30, () => { vetShow(335, 286, .64); vetNod(); sayVet('<b>Poppy?</b> Come on in!'); });
-    after(32.5, () => toExam(S));
+    after(4, () => { SFX.hiss(); ahh('HSSSS!', 690, 160, true); bump(.2); $('carrier').classList.add('shake'); });
+    after(7, () => { big.moving = true; S.bigIn = true; });
+    after(10, () => { big.moving = false; SFX.bigWoof(); ahh('WOOF!', 640, 180, true); bump(.24); });
+    after(10.9, () => { SFX.yip(); dog.hop = .7; ahh('wuff!', 300, 230); say('Poppy <b>barks back</b>. A very small wuff, but a brave one.'); });
+    after(13.5, () => { SFX.bigWoof(); ahh('WOOF!', 640, 180, true); bump(.14); });
+    after(16, () => { sayVet('<b>Poppy?</b> Come on in!'); });
+    after(18, () => toExam(S));
     S.update = (dt) => {
       S.t += dt;
       if (S.bigIn) big.x = Math.max(620, big.x - dt*120);
@@ -857,8 +858,6 @@
   }
   const EXAM = [
     {name: 'ears', tool: 'scope', at: [418, 196], line: 'Now her ears. Just a little light.', done: 'Lovely clean ears.'},
-    {name: 'eyes', tool: 'light', at: [436, 190], line: 'Her eyes next.', done: 'Bright eyes.'},
-    {name: 'teeth', tool: 'teeth', at: [457, 208], line: 'Let\'s see those little teeth.', done: 'Sharp ones!'},
     {name: 'heart', tool: 'steth', at: [382, 250], line: 'Now I listen to her heart.', done: 'A good strong heart.'},
     {name: 'ridge', tool: 'ridge', at: [350, 204], line: 'And last, I feel along her back.', done: null}
   ];
@@ -885,12 +884,18 @@
     const calm = M.s < .4;
     vetTo(st.at[0], st.at[1], st.tool);
     after(.8, () => {
-      bump(calm ? .08 : .2);
+      bump(calm ? .08 : .3);
       if (st.name === 'heart'){ for (let i = 0; i < 4; i++) setTimeout(SFX.beat, i*600/(1 + M.s)); }
       if (!calm){ ahh(pick(['Eek!', 'No!', 'Hmm…']), 420, 150, true); dog.hop = .5; }
     });
     after(2.8, () => {
       vetAway();
+      if (M.s >= .85){
+        sayVet('She\'s <b>too frightened</b>. Let\'s stop for today, and try again another time.');
+        SFX.whine(); controls(S, []);
+        after(4, () => finishRound(S, true));
+        return;
+      }
       if (calm){ S.hearts++; heartPop(); vetNod(); }
       if (st.name === 'ridge'){
         sayVet('Everything looks good. But here, on her ridge, there\'s a <b>tiny opening</b> in the skin. Some Ridgebacks are born with one. We\'ll close it one day, with a little operation. <b>Not today.</b>');
@@ -899,7 +904,7 @@
       }
       S.step++; S.busy = false;
       sayVet(`${st.done} ${EXAM[S.step].line} <b>Tell me when she's ready.</b>`);
-      if (!calm) say('She was scared that time. <i>Next time, calm her first, then tell the vet.</i>');
+      if (!calm) say('She was scared that time. <i>Watch her heart: calm her first, then tell the vet. If you rush her, she gets more and more frightened.</i>');
     });
   }
   function sub0(){}
@@ -924,7 +929,7 @@
     scene.innerHTML = `<g id="bg">${clinicBG(false)}</g>${VETBODY}<g id="tableG">${TABLE}</g>${dogSVG('poppy')}${VETARM}${HAND}<g id="tags"></g>`;
     hand = $('hand'); vetShow(560, 380, 1);
     const dog = makeDog('poppy', 360, GY, 1.12, 1); dog.pose = 'stand'; dog.signals = true;
-    const S = {key: 'jab', dog, dogs: [dog], t: 0, phase: 'settle', canStroke: true, treats: 2, hearts: 0, max: 3, busy: false};
+    const S = {key: 'jab', dog, dogs: [dog], t: 0, phase: 'settle', canStroke: true, treats: 2, hearts: 0, max: 2, busy: false};
     M.s = .42; M.s0 = .33; M.sum = 0; M.n = 0; M.scoring = true; M.gentle = 420;
     sayVet('Hello again, Poppy! Just a little jab today, against puppy illnesses. <b>Get her calm first</b>, then tell me when. A treat at the right moment helps: she\'s busy chewing when the needle comes.');
     controls(S, ['stroke', 'talk', 'treat', 'go']);
@@ -934,7 +939,7 @@
   function goJab(S){
     if (S.busy) return; S.busy = true;
     if (M.s < .35){ S.hearts++; heartPop(); }
-    S.countT = 0;
+    S.countT = 0; controls(S, ['stroke', 'talk', 'treat']);
     vetTo(392, 214, 'needle');
     sayVet('<b>On three.</b> One…'); SFX.tick();
     after(1.2, () => { sayVet('<b>On three.</b> One… two…'); SFX.tick(); }); 
@@ -943,17 +948,9 @@
       const chewing = M.chew > 0;
       if (chewing){ bump(.04); S.hearts++; heartPop(); ahh('nom', 470, 150); say('<b>She didn\'t even notice!</b> She was busy with her treat.'); }
       else { bump(.4); SFX.yelp(); ahh('Ouch!', 430, 150, true); flash('bad'); say('<b>Ouch!</b> She felt that one. <i>A treat just before the needle, and she\'d have been too busy chewing.</i>'); }
-      after(1.2, () => { vetAway(); sayVet('All done. <b>Brave girl.</b> Now help her settle again.'); S.phase = 'after'; S.afterT = 0; });
+      after(1.4, () => { vetAway(); controls(S, []); sayVet('All done. <b>Brave girl.</b>'); });
+      after(4.2, () => finishRound(S));
     });
-    S.update = (dt) => {
-      S.t += dt;
-      if (S.phase === 'after'){
-        S.afterT += dt;
-        if (S.afterT > 1.6) vetAway();
-        if (M.s < .3 && !S.settled && S.afterT > 2){ S.settled = true; S.hearts++; heartPop(); say('<b>Calm again.</b> Well done.'); after(2.4, () => finishRound(S)); }
-        if (S.afterT > 16 && !S.settled){ S.settled = true; say('She\'s still a bit shaken. That\'s all right. <b>Home time.</b>'); after(2.4, () => finishRound(S)); }
-      }
-    };
   }
 
   // ===== Round 3: the operation =====
@@ -1020,9 +1017,11 @@
     S.let = true;
     if (!forced){ S.hearts++; heartPop(); }
     const dog = S.dog; controls(S, []);
-    if (!forced) sayVet('Come on, Poppy. We\'ll see you this afternoon.');
-    after(1.4, () => { vetAway(); dog.gy = 372; dog.s = 1; dog.x = 470; dog.moving = true; S.goingOut = true; vet.tx = 1000; });
-    after(7.5, () => partWaiting(S));
+    if (!forced) sayVet('Good girl, Poppy. Lie down for me.');
+    dog.pose = 'lie'; S.canStroke = false;
+    after(2.2, () => { dog.shut = true; });
+    after(3.2, () => sayVet('She\'s ready. <b>We\'ll see you this afternoon.</b>'));
+    after(6.5, () => partWaiting(S));
   }
   function partWaiting(S){
     S.part = 'waiting';
@@ -1106,6 +1105,7 @@
     vetShow(560, 380, 1);
     dog.el.cone.style.display = ''; dog.el.shave.style.display = '';
     controls(S, []); hrGone(true);
+    S.canStroke = false;
     sayVet('<b>Ten days later.</b> Let\'s take those stitches out.');
     after(1.4, () => { vetTo(350, 204, 'scissors'); });
     after(2.4, () => SFX.snip()); after(3.2, () => SFX.snip());
@@ -1131,6 +1131,7 @@
     toy:       {label: 'The toy!', small: 'distract her', cls: 'treat'}
   };
   function controls(S, keys){
+    M.strokeHold = false; M.talk = false; strokeShown = false; hideHand();
     const c = $('controls');
     c.style.setProperty('--n', 2);
     c.innerHTML = keys.map((k, i) => `<button class="ctl ${CTL[k].cls}" data-k="${k}"${keys.length % 2 && i === keys.length - 1 ? ' style="grid-column:1 / -1"' : ''}>${CTL[k].label}<small id="sm-${k}">${CTL[k].small}</small></button>`).join('');
@@ -1183,7 +1184,7 @@
     const k = 1 + .22*Math.pow(Math.max(0, Math.sin(beatPh*Math.PI*2)), 6);
     $('hrIcon').style.transform = `scale(${k.toFixed(2)})`;
     if (fastWarn > 0) fastWarn -= dt;
-    if (M.strokeHold && R && R.dog && hand){
+    if (M.strokeHold && R && R.dog && R.canStroke && hand){
       const d = R.dog, k = Math.sin(tt*1.7);
       hand.style.display = ''; $('handLab').textContent = '';
       hand.setAttribute('transform', `translate(${(d.x - 10*d.s + k*34*d.s).toFixed(1)},${(d.gy - (82 - (d.Q.lift || 0))*d.s).toFixed(1)}) scale(.62)`);
@@ -1222,9 +1223,19 @@
     R = ROUNDS[i].make();
     last = 0; if (!raf) raf = requestAnimationFrame(frame);
   }
-  function finishRound(S){
+  function finishRound(S, failed){
     if (R !== S) return;
     M.scoring = false;
+    if (failed){
+      $('endDay').textContent = `Round ${ri + 1} · ${ROUNDS[ri].name}`;
+      $('endTitle').textContent = 'Too frightened';
+      $('endBody').innerHTML = `<p>Poppy got so scared that Dr. Wanjiku had to stop. <b>The check-up isn't finished.</b></p><p class="small">Watch her heart and her signals. Stroke her and talk to her until she's calm, and only then tell the vet to go ahead.</p>`;
+      $('nextBtn').textContent = 'Try again';
+      $('againBtn').style.display = 'none';
+      $('ending').style.display = 'flex';
+      return;
+    }
+    $('againBtn').style.display = '';
     const stars = starsFor(avgStress()), hearts = Math.min(S.hearts, S.max);
     RESULTS[ri] = {stars, hearts, max: S.max};
     RESULTS.length = Math.max(RESULTS.length, ri + 1);
@@ -1247,7 +1258,7 @@
     $('ending').style.display = 'flex';
     renderCards();
   }
-  $('nextBtn').addEventListener('click', () => { unlockAudio(); if (ri < 2) start(ri + 1); else home(); });
+  $('nextBtn').addEventListener('click', () => { unlockAudio(); if ($('nextBtn').textContent === 'Try again') start(ri); else if (ri < 2) start(ri + 1); else home(); });
   $('againBtn').addEventListener('click', () => { unlockAudio(); start(ri); });
   function home(){ R = null; later.length = 0; $('ending').style.display = 'none'; $('game').style.display = 'none'; $('landing').style.display = 'flex'; renderCards(); }
   $('homeBtn').addEventListener('click', home);
