@@ -287,6 +287,11 @@
   .brow .stp{font-weight:700; color:#2f8a3a; border:3px solid #2f8a3a; border-radius:8px; padding:1px 7px; transform:rotate(-4deg); font-size:13px;}
   .about{font-size:13.5px; color:var(--muted); line-height:1.45; text-align:left; background:#f6f2fb; border-radius:12px; padding:10px 12px; margin:12px 0 0;}
   .tag{font-family:'Fredoka',sans-serif; font-weight:600;}
+  #inset{position:absolute; top:6%; right:3%; width:24%; z-index:3; background:#fff; border-radius:18px; padding:3% 2% 2.4%; text-align:center;
+    box-shadow:0 6px 18px rgba(40,80,70,.22); border:3px solid #3fb6a8; opacity:0; transform:scale(.6) rotate(-4deg); transition:opacity .25s ease, transform .35s cubic-bezier(.2,1.5,.4,1); pointer-events:none;}
+  #inset.on{opacity:1; transform:scale(1) rotate(-2deg);}
+  #inset .ico{font-size:clamp(26px, 9vw, 52px); line-height:1.1;}
+  #inset .cap{font-family:'Fredoka',sans-serif; font-weight:600; font-size:clamp(11px, 3.2vw, 17px); color:#2c8a7f; margin-top:2px;}
   .floaty{animation:floaty 2.2s ease-out forwards;}
   @keyframes floaty{0%{opacity:0; transform:translateY(6px);} 20%{opacity:1;} 100%{opacity:0; transform:translateY(-46px);}}
 </style>
@@ -395,6 +400,7 @@
   <div id="sceneWrap">
     <svg id="scene" viewBox="0 0 800 420" aria-label="Poppy at the vet" style="touch-action:none"></svg>
     <div id="flash"></div>
+    <div id="inset"><div class="ico"></div><div class="cap"></div></div>
   </div>
   <div id="bubble">
     <div class="face" id="sayFace"><svg viewBox="0 0 100 100"><use href="#poppyFace"/></svg></div>
@@ -730,72 +736,33 @@
       <text id="handLab" x="0" y="-56" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="600" font-size="20" fill="#2f8a3a">gently…</text>
     </g>`;
 
-  // ---------- Dr. Wanjiku ----------
-  const TOOLS = {
-    none: '',
-    light: '<rect x="-4" y="-40" width="8" height="34" rx="3" fill="#56606e"/><circle cx="0" cy="-42" r="5" fill="#fff6b0"/>',
-    scope: '<path d="M-6 -36 L 6 -36 L 2 -54 L -2 -54 Z" fill="#2c3440"/><rect x="-5" y="-36" width="10" height="30" rx="3" fill="#56606e"/>',
-    steth: '<circle cx="0" cy="-24" r="10" fill="#c9d3de" stroke="#56606e" stroke-width="3"/>',
-    needle: '<g transform="rotate(-108) translate(0,-6)"><rect x="-1.5" y="-4" width="3" height="12" fill="#c9d3de"/><rect x="-7" y="6" width="14" height="3" rx="1.5" fill="#c9d3de"/><rect x="-4" y="-30" width="8" height="26" rx="2" fill="#f4f8ff" stroke="#9fb7d9" stroke-width="1.5"/><rect x="-2.6" y="-27" width="5.2" height="12" fill="#9fd3ff"/><g stroke="#9fb7d9" stroke-width="1"><line x1="-4" y1="-22" x2="-1" y2="-22"/><line x1="-4" y1="-17" x2="-1" y2="-17"/><line x1="-4" y1="-12" x2="-1" y2="-12"/></g><line x1="0" y1="-30" x2="0" y2="-46" stroke="#8e98a6" stroke-width="1.4"/></g>',
-    scissors: '<path d="M-2 -8 L -9 -48 M 2 -8 L 9 -48" stroke="#7d8794" stroke-width="4" stroke-linecap="round"/><circle cx="-6" cy="0" r="6" fill="none" stroke="#3a7bd5" stroke-width="3"/><circle cx="6" cy="0" r="6" fill="none" stroke="#3a7bd5" stroke-width="3"/>'
+  // ---------- Dr. Wanjiku: a voice. What she does shows in a little window, where on Poppy shows as a ring ----------
+  const ICONS = {
+    scope: ['👂', 'Ears'], light: ['👁️', 'Eyes'], teeth: ['🦷', 'Teeth'], steth: ['🩺', 'Heart'],
+    ridge: ['✋', 'Her back'], needle: ['💉', 'The jab'], scissors: ['✂️', 'Stitches out']
   };
-  const SKIN = '#8d5a3c';
-  // standing, facing us; origin at her feet. Behind the table you only see her from the waist up.
-  const VETBODY = `<g id="vetBody" style="display:none">
-      <rect x="-26" y="-130" width="22" height="128" rx="9" fill="#2a7d74"/><rect x="4" y="-130" width="22" height="128" rx="9" fill="#2a7d74"/>
-      <ellipse cx="-15" cy="-2" rx="16" ry="7" fill="#eef2f4"/><ellipse cx="15" cy="-2" rx="16" ry="7" fill="#eef2f4"/>
-      <path d="M40 -238 Q 58 -200 52 -150" stroke="#3fb6a8" stroke-width="22" stroke-linecap="round" fill="none"/><circle cx="52" cy="-138" r="11" fill="${SKIN}"/>
-      <path d="M-46 -236 Q -50 -252 -30 -258 L 30 -258 Q 50 -252 46 -236 L 42 -118 Q 0 -108 -42 -118 Z" fill="#3fb6a8"/>
-      <path d="M-14 -258 L 0 -234 L 14 -258 Z" fill="${SKIN}"/>
-      <path d="M-20 -256 Q -28 -214 -6 -204 M 20 -256 Q 28 -214 6 -204" stroke="#56606e" stroke-width="4" fill="none"/><circle cx="0" cy="-202" r="7" fill="#c9d3de" stroke="#56606e" stroke-width="3"/>
-      <rect x="16" y="-228" width="20" height="12" rx="2" fill="#fff"/><rect x="19" y="-224" width="14" height="2.5" fill="#3fb6a8"/>
-      <rect x="-9" y="-272" width="18" height="18" fill="${SKIN}"/>
-      <circle cx="-30" cy="-292" r="7" fill="${SKIN}"/><circle cx="30" cy="-292" r="7" fill="${SKIN}"/>
-      <g id="vetHead">
-        <circle cx="0" cy="-294" r="30" fill="${SKIN}"/>
-        <path d="M-31 -296 Q -32 -334 0 -332 Q 32 -334 31 -296 Q 24 -316 0 -316 Q -24 -316 -31 -296 Z" fill="#24170f"/>
-        <circle cx="-10" cy="-296" r="3.4" fill="#1d1612"/><circle cx="10" cy="-296" r="3.4" fill="#1d1612"/>
-        <ellipse cx="-17" cy="-284" rx="6" ry="3.5" fill="#d9846a" opacity=".45"/><ellipse cx="17" cy="-284" rx="6" ry="3.5" fill="#d9846a" opacity=".45"/>
-        <path d="M-10 -282 Q 0 -273 10 -282" stroke="#1d1612" stroke-width="2.6" fill="none" stroke-linecap="round"/>
-      </g>
-    </g>`;
-  const VETARM = `<g id="vetArm" style="display:none">
-      <line id="vaUp" stroke="#3fb6a8" stroke-width="22" stroke-linecap="round"/>
-      <line id="vaFore" stroke="${SKIN}" stroke-width="15" stroke-linecap="round"/>
-      <g id="vaHand"><g id="vetTool"></g><circle r="11" fill="${SKIN}"/></g>
-    </g>`;
-  const vet = {x: 560, tx: 560, feet: 380, sc: 1, on: false, hx: 0, hy: 0, thx: null, thy: null, nod: 0};
-  function vetShow(x, feet, sc){
-    vet.x = vet.tx = x; vet.feet = feet; vet.sc = sc || 1; vet.on = true; vet.thx = null;
-    $('vetBody').style.display = ''; $('vetArm').style.display = '';
-    const r = vetRest(); vet.hx = r.x; vet.hy = r.y; $('vetTool').innerHTML = '';
+  const VETBODY = '';
+  const VETARM = `<g id="spot" style="display:none; pointer-events:none"><circle r="20" fill="rgba(63,182,168,.15)" stroke="#3fb6a8" stroke-width="5"/><circle id="spotPulse" r="20" fill="none" stroke="#3fb6a8" stroke-width="3"/></g>`;
+  const vet = {tx: 0, on: false, spot: null, t: 0};
+  function vetShow(){}
+  function vetHide(){ vetAway(); }
+  function vetNod(){}
+  function vetTo(x, y, key){
+    const ic = ICONS[key];
+    if (!ic){ vetAway(); return; }
+    vet.spot = {x, y}; vet.t = 0;
+    const box = $('inset');
+    box.querySelector('.ico').textContent = ic[0]; box.querySelector('.cap').textContent = ic[1];
+    box.classList.remove('on'); void box.offsetWidth; box.classList.add('on');
   }
-  function vetHide(){ vet.on = false; const b = $('vetBody'); if (b){ b.style.display = 'none'; $('vetArm').style.display = 'none'; } }
-  function vetRest(){ return {x: vet.x - 50*vet.sc, y: vet.feet - 136*vet.sc}; }
-  function vetTo(x, y, tool){ vet.thx = x; vet.thy = y; vet.tool = tool || 'none'; $('vetTool').innerHTML = TOOLS[vet.tool]; }
-  function vetAway(){ vet.thx = null; setTimeout(() => { if (vet.thx == null && $('vetTool')) $('vetTool').innerHTML = ''; }, 700); }
-  function vetNod(){ vet.nod = 1; }
+  function vetAway(){ vet.spot = null; const box = $('inset'); if (box) box.classList.remove('on'); const sp = $('spot'); if (sp) sp.style.display = 'none'; }
   function renderVet(dt){
-    const body = $('vetBody'); if (!body || !vet.on) return;
-    vet.x += (vet.tx - vet.x)*Math.min(1, dt*2.2);
-    vet.nod = Math.max(0, vet.nod - dt*1.6);
-    body.setAttribute('transform', `translate(${vet.x.toFixed(1)},${vet.feet}) scale(${vet.sc})`);
-    $('vetHead').setAttribute('transform', `translate(0,${(Math.sin(vet.nod*Math.PI*2)*4).toFixed(1)})`);
-    const r = vetRest(), tx = vet.thx == null ? r.x : vet.thx, ty = vet.thx == null ? r.y : vet.thy;
-    vet.hx += (tx - vet.hx)*Math.min(1, dt*4); vet.hy += (ty - vet.hy)*Math.min(1, dt*4);
-    // a two-bone arm from her shoulder to her hand
-    const sx = vet.x - 34*vet.sc, sy = vet.feet - 234*vet.sc, L = 100*vet.sc;
-    let dx = vet.hx - sx, dy = vet.hy - sy, d = Math.max(1, Math.hypot(dx, dy));
-    let hx = vet.hx, hy = vet.hy;
-    if (d > 2*L - 1){ const k = (2*L - 1)/d; hx = sx + dx*k; hy = sy + dy*k; dx = hx - sx; dy = hy - sy; d = 2*L - 1; }
-    const h = Math.sqrt(Math.max(0, L*L - d*d/4)), mx = (sx + hx)/2, my = (sy + hy)/2;
-    let nx = -dy/d, ny = dx/d; if (ny < 0){ nx = -nx; ny = -ny; }
-    const ex = mx + nx*h, ey = my + ny*h;
-    const set = (id, a, b, c, e) => { const l = $(id); l.setAttribute('x1', a.toFixed(1)); l.setAttribute('y1', b.toFixed(1)); l.setAttribute('x2', c.toFixed(1)); l.setAttribute('y2', e.toFixed(1)); };
-    set('vaUp', sx, sy, ex, ey); set('vaFore', ex, ey, hx, hy);
-    $('vaUp').setAttribute('stroke-width', 22*vet.sc); $('vaFore').setAttribute('stroke-width', 13*vet.sc);
-    const ang = vet.tool === 'needle' ? 0 : Math.atan2(hy - ey, hx - ex)*180/Math.PI + 90;
-    $('vaHand').setAttribute('transform', `translate(${hx.toFixed(1)},${hy.toFixed(1)}) rotate(${ang.toFixed(1)}) scale(${vet.sc})`);
+    const sp = $('spot'); if (!sp) return;
+    if (!vet.spot){ sp.style.display = 'none'; return; }
+    vet.t += dt;
+    sp.style.display = ''; sp.setAttribute('transform', `translate(${vet.spot.x.toFixed(1)},${vet.spot.y.toFixed(1)})`);
+    const k = (vet.t*1.4) % 1;
+    $('spotPulse').setAttribute('r', (20 + 22*k).toFixed(1)); $('spotPulse').setAttribute('opacity', (1 - k).toFixed(2));
   }
 
   // ---------- backgrounds ----------
@@ -889,11 +856,11 @@
     controls(S, ['stroke', 'talk', 'treat', 'go']);
   }
   const EXAM = [
-    {name: 'ears', tool: 'scope', at: [418, 200], line: 'Now her ears. Just a little light.', done: 'Lovely clean ears.'},
-    {name: 'eyes', tool: 'light', at: [446, 196], line: 'Her eyes next.', done: 'Bright eyes.'},
-    {name: 'teeth', tool: 'none', at: [458, 222], line: 'Let\'s see those little teeth.', done: 'Sharp ones!'},
-    {name: 'heart', tool: 'steth', at: [372, 250], line: 'Now I listen to her heart.', done: 'A good strong heart.'},
-    {name: 'ridge', tool: 'none', at: [352, 206], line: 'And last, I feel along her back.', done: null}
+    {name: 'ears', tool: 'scope', at: [418, 196], line: 'Now her ears. Just a little light.', done: 'Lovely clean ears.'},
+    {name: 'eyes', tool: 'light', at: [436, 190], line: 'Her eyes next.', done: 'Bright eyes.'},
+    {name: 'teeth', tool: 'teeth', at: [457, 208], line: 'Let\'s see those little teeth.', done: 'Sharp ones!'},
+    {name: 'heart', tool: 'steth', at: [382, 250], line: 'Now I listen to her heart.', done: 'A good strong heart.'},
+    {name: 'ridge', tool: 'ridge', at: [350, 204], line: 'And last, I feel along her back.', done: null}
   ];
   function goCheck(S){
     if (S.busy) return;
@@ -968,15 +935,15 @@
     if (S.busy) return; S.busy = true;
     if (M.s < .35){ S.hearts++; heartPop(); }
     S.countT = 0;
-    vetTo(426, 140, 'needle');
+    vetTo(392, 214, 'needle');
     sayVet('<b>On three.</b> One…'); SFX.tick();
-    after(1.2, () => { sayVet('<b>On three.</b> One… two…'); SFX.tick(); vetTo(402, 176, 'needle'); });
-    after(2.4, () => { sayVet('<b>On three.</b> One… two… <b>three!</b>'); vetTo(384, 204, 'needle'); });
+    after(1.2, () => { sayVet('<b>On three.</b> One… two…'); SFX.tick(); }); 
+    after(2.4, () => { sayVet('<b>On three.</b> One… two… <b>three!</b>'); });
     after(2.7, () => {
       const chewing = M.chew > 0;
       if (chewing){ bump(.04); S.hearts++; heartPop(); ahh('nom', 470, 150); say('<b>She didn\'t even notice!</b> She was busy with her treat.'); }
       else { bump(.4); SFX.yelp(); ahh('Ouch!', 430, 150, true); flash('bad'); say('<b>Ouch!</b> She felt that one. <i>A treat just before the needle, and she\'d have been too busy chewing.</i>'); }
-      after(1.2, () => { vetTo(420, 188, 'none'); vetNod(); sayVet('All done. <b>Brave girl.</b> Now help her settle again.'); S.phase = 'after'; S.afterT = 0; });
+      after(1.2, () => { vetAway(); sayVet('All done. <b>Brave girl.</b> Now help her settle again.'); S.phase = 'after'; S.afterT = 0; });
     });
     S.update = (dt) => {
       S.t += dt;
@@ -997,6 +964,7 @@
     return S;
   }
   function setDogScene(S, html, x, gy, s, pose, fg){
+    vetAway();
     scene.innerHTML = html + VETBODY + (fg || '') + dogSVG('poppy') + VETARM + HAND + '<g id="tags"></g>';
     vet.on = false;
     hand = $('hand');
@@ -1052,7 +1020,6 @@
     S.let = true;
     if (!forced){ S.hearts++; heartPop(); }
     const dog = S.dog; controls(S, []);
-    vetTo(420, 196, 'none'); vetNod();
     if (!forced) sayVet('Come on, Poppy. We\'ll see you this afternoon.');
     after(1.4, () => { vetAway(); dog.gy = 372; dog.s = 1; dog.x = 470; dog.moving = true; S.goingOut = true; vet.tx = 1000; });
     after(7.5, () => partWaiting(S));
@@ -1140,7 +1107,7 @@
     dog.el.cone.style.display = ''; dog.el.shave.style.display = '';
     controls(S, []); hrGone(true);
     sayVet('<b>Ten days later.</b> Let\'s take those stitches out.');
-    after(1.4, () => { vetTo(352, 206, 'scissors'); });
+    after(1.4, () => { vetTo(350, 204, 'scissors'); });
     after(2.4, () => SFX.snip()); after(3.2, () => SFX.snip());
     after(4.2, () => { vetAway(); dog.el.shave.style.display = 'none'; dog.el.scar.style.display = ''; dog.el.cone.style.display = 'none'; sayVet('And the cone comes off. <b>All healed.</b>'); SFX.warm(); });
     after(8, () => {
@@ -1219,7 +1186,7 @@
     if (M.strokeHold && R && R.dog && hand){
       const d = R.dog, k = Math.sin(tt*1.7);
       hand.style.display = ''; $('handLab').textContent = '';
-      hand.setAttribute('transform', `translate(${(d.x - 10*d.s + k*34*d.s).toFixed(1)},${(d.gy - (82 - (d.Q.lift || 0))*d.s).toFixed(1)}) scale(.85)`);
+      hand.setAttribute('transform', `translate(${(d.x - 10*d.s + k*34*d.s).toFixed(1)},${(d.gy - (82 - (d.Q.lift || 0))*d.s).toFixed(1)}) scale(.62)`);
       strokeShown = true;
     } else if (strokeShown && !ptr){ strokeShown = false; hideHand(); }
     const go = document.querySelector('[data-k="go"]');
@@ -1248,7 +1215,7 @@
   }
   renderCards();
   function start(i){
-    ri = i; later.length = 0; M.talk = false; M.strokeHold = false; M.chew = 0; M.stroke = 0; M.strokeBad = 0; vet.on = false;
+    vetAway(); ri = i; later.length = 0; M.talk = false; M.strokeHold = false; M.chew = 0; M.stroke = 0; M.strokeBad = 0; vet.on = false;
     $('landing').style.display = 'none'; $('ending').style.display = 'none'; $('game').style.display = 'flex';
     $('roundName').textContent = `Round ${i + 1} · ${ROUNDS[i].name}`;
     hrGone(false);
